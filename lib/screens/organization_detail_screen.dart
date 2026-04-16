@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/organization.dart';
+import '../models/task.dart';
+import '../services/organization_service.dart';
+import 'create_task_screen.dart';
 
 class OrganizationDetailScreen extends StatefulWidget {
   final Organization organization;
@@ -12,9 +15,31 @@ class OrganizationDetailScreen extends StatefulWidget {
 }
 
 class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
-  // Mock tasks as requested by Persona 1
-  // Will be used by Persona 4 later to add "real" memory-tasks
-  final List<String> _tasks = ['Tarea 1', 'Tarea 2'];
+  final OrganizationService _organizationService = OrganizationService();
+  late Future<List<Task>> _tasksFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _tasksFuture = _organizationService.fetchTasksByOrganization(
+      widget.organization.id,
+    );
+  }
+
+  void _reloadTasks() {
+    setState(() {
+      _tasksFuture = _organizationService.fetchTasksByOrganization(
+        widget.organization.id,
+      );
+    });
+  }
+
+  String _formatDate(DateTime date) {
+    final String day = date.day.toString().padLeft(2, '0');
+    final String month = date.month.toString().padLeft(2, '0');
+    final String year = date.year.toString();
+    return '$day/$month/$year';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,73 +103,93 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Próximas Tareas',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
-                  ),
-                ),
-                Chip(
-                  label: Text('${_tasks.length} activas'),
-                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                  labelStyle: const TextStyle(
-                      color: Colors.blueAccent, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
           Expanded(
-            child: _tasks.isEmpty
-                ? const Center(child: Text('No hay tareas aún.'))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    itemCount: _tasks.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+            child: FutureBuilder<List<Task>>(
+              future: _tasksFuture,
+              builder: (BuildContext context, AsyncSnapshot<List<Task>> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'No se pudieron cargar las tareas. ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
+                final List<Task> tasks = snapshot.data ?? <Task>[];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Próximas Tareas',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
                             ),
-                          ],
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
-                          leading: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              shape: BoxShape.circle,
+                          ),
+                          Chip(
+                            label: Text('${tasks.length} activas'),
+                            backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                            labelStyle: const TextStyle(
+                              color: Colors.blueAccent,
+                              fontWeight: FontWeight.bold,
                             ),
-                            child: const Icon(Icons.check_circle_outline,
-                                color: Colors.green),
                           ),
-                          title: Text(
-                            _tasks[index],
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 16),
-                          ),
-                          subtitle: const Text('Simulada en memoria'),
-                          trailing: Icon(Icons.chevron_right,
-                              color: Colors.grey[400]),
-                        ),
-                      );
-                    },
-                  ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: tasks.isEmpty
+                          ? const Center(
+                              child: Text('Aún no hay tareas en esta organización'),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              itemCount: tasks.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final Task task = tasks[index];
+
+                                return Card(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 8,
+                                  ),
+                                  child: ListTile(
+                                    leading: const Icon(Icons.task_alt),
+                                    title: Text(
+                                      task.titulo,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      'Inicio: ${_formatDate(task.fechaInicio)}\nFin: ${_formatDate(task.fechaFin)}',
+                                    ),
+                                    isThreeLine: true,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
           _buildCreateButton(context),
         ],
@@ -167,11 +212,19 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
           ],
         ),
         child: ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Navegación a Crear Tarea (Persona 2/4)')),
+          onPressed: () async {
+            final bool? created = await Navigator.of(context).push<bool>(
+              MaterialPageRoute<bool>(
+                builder: (BuildContext context) => CreateTaskScreen(
+                  organizacionId: widget.organization.id,
+                  usuarios: widget.organization.usuarios,
+                ),
+              ),
             );
+
+            if (created == true) {
+              _reloadTasks();
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blueAccent,
