@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../utils/session_manager.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -7,7 +8,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = SessionManager().currentUser;
+    final user = context.watch<AuthProvider>().currentUser;
 
     if (user == null) {
       return Scaffold(
@@ -77,8 +78,8 @@ class ProfileScreen extends StatelessWidget {
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar sesión', style: TextStyle(fontSize: 16)),
                 onPressed: () {
-                  // Limpiamos la sesión
-                  SessionManager().logout();
+                  // Limpiamos la sesión usando el Provider
+                  context.read<AuthProvider>().logout();
                   
                   // Rompemos el historial en el navegador raíz para asegurar salir del wrapper completamente
                   Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(

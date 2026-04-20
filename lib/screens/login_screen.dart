@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
 import '../models/user.dart';
-import '../utils/session_manager.dart';
+import '../providers/auth_provider.dart';
 import 'main_wrapper_screen.dart';
 import 'register_screen.dart';
 
@@ -15,47 +15,30 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  bool _isLoading = false;
-  String _errorMessage = '';
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+    final authProvider = context.read<AuthProvider>();
 
-    try {
-      final userData = await _authService.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      
-      final user = User.fromJson(userData);
-      SessionManager().login(user);
+    final success = await authProvider.login(
+      _emailController.text,
+      _passwordController.text,
+    );
 
-      if (!mounted) return;
-      
+    if (success && mounted) {
       // Navegar al Wrapper Principal y eliminar la pantalla de login del historial
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainWrapperScreen()),
       );
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final _isLoading = authProvider.isLoading;
+    final _errorMessage = authProvider.errorMessage;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Iniciar Sesión'),
