@@ -1,3 +1,4 @@
+import 'package:ea_seminario_flutter/services/organization_service.dart';
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 
@@ -15,6 +16,8 @@ class TaskDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final OrganizationService _organizationService = OrganizationService();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -79,7 +82,7 @@ class TaskDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Dates Section
             const Text(
               'Plazos',
@@ -108,7 +111,7 @@ class TaskDetailScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            
+
             // Assigned Users Section
             const Text(
               'Usuarios Asignados',
@@ -180,6 +183,47 @@ class TaskDetailScreen extends StatelessWidget {
                   );
                 },
               ),
+            const Text(
+              'Status',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: task.status,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.task_alt),
+              ),
+              items: List.of([
+                DropdownMenuItem(value: 'to-do', child: Text("to-do")),
+                DropdownMenuItem(
+                  value: 'in progress',
+                  child: Text("in progress"),
+                ),
+                DropdownMenuItem(value: 'done', child: Text("done")),
+              ]).toList(),
+              onChanged: (value) async {
+                if (value != null) {
+                  try {
+                    await _organizationService.updateTask(task.id, value, task);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error al actualizar tarea: $e'),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -217,10 +261,7 @@ class TaskDetailScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               date,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ],
         ),

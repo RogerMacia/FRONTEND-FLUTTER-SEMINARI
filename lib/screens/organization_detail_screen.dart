@@ -124,7 +124,29 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                   );
                 }
 
-                final List<Task> tasks = snapshot.data ?? <Task>[];
+                final List<Task> gottenTasks = snapshot.data ?? <Task>[];
+                late final List<Task> tasks;
+                if (gottenTasks.isNotEmpty) {
+                  final List<Task> toDoTasks = gottenTasks
+                      .where((task) => task.status == "to-do")
+                      .toList();
+
+                  final List<Task> inProgressTasks = gottenTasks
+                      .where((task) => task.status == "in progress")
+                      .toList();
+
+                  final List<Task> doneTasks = gottenTasks
+                      .where((task) => task.status == "done")
+                      .toList();
+
+                  tasks = List.of([
+                    ...toDoTasks,
+                    ...inProgressTasks,
+                    ...doneTasks,
+                  ]).toList();
+                } else {
+                  tasks = gottenTasks;
+                }
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,13 +195,14 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                                     vertical: 8,
                                   ),
                                   child: ListTile(
-                                    onTap: () {
-                                      Navigator.of(context).push(
+                                    onTap: () async {
+                                      await Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               TaskDetailScreen(task: task),
                                         ),
                                       );
+                                      _reloadTasks();
                                     },
                                     leading: const Icon(Icons.task_alt),
                                     title: Text(
