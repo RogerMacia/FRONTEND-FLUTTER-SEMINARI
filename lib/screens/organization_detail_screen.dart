@@ -157,7 +157,9 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                     Expanded(
                       child: tasks.isEmpty
                           ? const Center(
-                              child: Text('Aún no hay tareas en esta organización'),
+                              child: Text(
+                                'Aún no hay tareas en esta organización',
+                              ),
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -174,7 +176,8 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                                     onTap: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (context) => TaskDetailScreen(task: task),
+                                          builder: (context) =>
+                                              TaskDetailScreen(task: task),
                                         ),
                                       );
                                     },
@@ -188,7 +191,12 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                                     subtitle: Text(
                                       'Inicio: ${_formatDate(task.fechaInicio)}\nFin: ${_formatDate(task.fechaFin)}',
                                     ),
-                                    isThreeLine: true,
+                                    trailing: Text(
+                                      'Status: ${task.status}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 );
                               },

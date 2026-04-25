@@ -152,8 +152,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         usuarios: _selectedUsuarioIds.toList(),
       );
 
-      print('Formulario válido. Datos listos para la Fase 4');
-
       if (!mounted) {
         return;
       }
@@ -193,7 +191,10 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                     const SizedBox(height: 12),
                     const Text(
                       'Selecciona usuarios',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Expanded(
@@ -343,18 +344,16 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                                     _selectedUsuarioIds.isEmpty
                                         ? 'Pulsa para seleccionar'
                                         : widget.usuarios
-                                            .where(
-                                              (u) => _selectedUsuarioIds.contains(
-                                                u.id,
-                                              ),
-                                            )
-                                            .map((u) => u.name)
-                                            .join(', '),
+                                              .where(
+                                                (u) => _selectedUsuarioIds
+                                                    .contains(u.id),
+                                              )
+                                              .map((u) => u.name)
+                                              .join(', '),
                                     style: TextStyle(
-                                      color:
-                                          _selectedUsuarioIds.isEmpty
-                                              ? Colors.grey[600]
-                                              : Colors.black87,
+                                      color: _selectedUsuarioIds.isEmpty
+                                          ? Colors.grey[600]
+                                          : Colors.black87,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
